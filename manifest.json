@@ -1,19 +1,20 @@
 {
-  "name": "Front Mission 3 — Battle Skills",
-  "short_name": "FM3 Skills",
-  "description": "Offline Front Mission 3 Battle Skills Database",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#0b0f14",
-  "theme_color": "#0b0f14",
-  "orientation": "any",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23121821'/%3E%3Crect x='24' y='24' width='464' height='464' rx='76' fill='none' stroke='%23f59e0b' stroke-width='20'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='170' fill='%23f59e0b'%3EFM3%3C/text%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+"id": "fm3-battle-skills-pwa-v1",
+"name": "Front Mission 3 — Battle Skills",
+"short_name": "FM3 Skills",
+"description": "Offline Front Mission 3 Battle Skills Database",
+"start_url": "./",
+"scope": "./",
+"display": "standalone",
+"background_color": "#0b0f14",
+"theme_color": "#0b0f14",
+"orientation": "any",
+"icons": [
+{
+"src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23121821'/%3E%3Crect x='24' y='24' width='464' height='464' rx='76' fill='none' stroke='%23f59e0b' stroke-width='20'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='170' fill='%23f59e0b'%3EFM3%3C/text%3E%3C/svg%3E",
+"sizes": "512x512",
+"type": "image/svg+xml",
+"purpose": "any maskable"
+}
+]
 }
