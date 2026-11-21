@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Front Mission 3 — Battle Skills Database (Offline)</title>
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & TACTICAL NETWORK TERMINAL THEME (100% OFFLINE CSS)
+       ========================================================================== */
+    :root {
+      --bg-base: #0b0f14;
+      --bg-panel: #121821;
+      --bg-panel-alt: #18202c;
+      --bg-input: #0e131a;
+      --bg-hover: #1e2836;
+      --border-subtle: #253040;
+      --border-strong: #384961;
+      --text-primary: #e6edf5;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-amber: #f59e0b;
+      --accent-amber-dim: rgba(245, 158, 11, 0.14);
+      --accent-cyan: #38bdf8;
+      --accent-cyan-dim: rgba(56, 189, 248, 0.14);
+      --accent-emerald: #10b981;
+      --accent-emerald-dim: rgba(16, 185, 129, 0.14);
+      --accent-rose: #f43f5e;
+      --accent-rose-dim: rgba(244, 63, 94, 0.14);
+      --accent-violet: #a855f7;
+      --accent-violet-dim: rgba(168, 85, 247, 0.14);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-panel: 0 10px 30px rgba(0, 0, 0, 0.45);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 90%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ==========================================================================
+       2. HEADER & TACTICAL STATUS BAR
+       ========================================================================== */
+    .hud-header {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--accent-amber);
+      border-radius: var(--radius-lg);
+      padding: 14px 20px;
+      box-shadow: var(--shadow-panel);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hud-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    /* ==========================================================================
+       3. CONTROLS & FILTER TOOLBAR
+       ========================================================================== */
+    .controls-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-panel);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .controls-header-title {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .active-filter-badge {
+      background: var(--accent-cyan-dim);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--accent-cyan);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .active-filter-badge.visible {
+      display: inline-block;
+    }
+
+    .controls-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .controls-panel.collapsed .controls-body {
+      display: none;
+    }
+
+    .controls-top {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr 0.9fr 1.2fr 0.9fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    @media (max-width: 1200px) {
+      .controls-top {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .controls-top {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .control-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+    }
+
+    .input-field,
+    .select-field {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      padding: 9px 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .input-field:focus,
+    .select-field:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 9px 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .btn-amber {
+      border-color: rgba(245, 158, 11, 0.5);
+      color: var(--accent-amber);
+      background: var(--accent-amber-dim);
+    }
+
+    .btn-amber:hover {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: var(--accent-amber);
+      color: #fcd34d;
+    }
+
+    /* Quick Filter Rows */
+    .quick-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .quick-pills-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-right: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .pill {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 4px 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .pill.active {
+      background: var(--accent-cyan-dim);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .pill.slot-pill.active {
+      background: var(--accent-amber-dim);
+      border-color: var(--accent-amber);
+      color: var(--accent-amber);
+    }
+
+    /* ==========================================================================
+       4. DATATABLE CONTAINER & COLUMN HEADERS
+       ========================================================================== */
+    .table-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-panel);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    thead {
+      background: var(--bg-panel-alt);
+      border-bottom: 2px solid var(--border-strong);
+    }
+
+    th {
+      padding: 12px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      user-select: none;
+      vertical-align: top;
+    }
+
+    .th-sort {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      cursor: pointer;
+      padding-bottom: 8px;
+      white-space: nowrap;
+    }
+
+    .th-sort:hover {
+      color: var(--accent-cyan);
+    }
+
+    .sort-indicator {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    th.sorted-asc .sort-indicator,
+    th.sorted-desc .sort-indicator {
+      color: var(--accent-amber);
+    }
+
+    .col-filter-input {
+      width: 100%;
+      min-width: 75px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.77rem;
+      padding: 5px 8px;
+      font-weight: 400;
+    }
+
+    .col-filter-input:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color 0.12s ease;
+    }
+
+    tbody tr.data-row:nth-of-type(4n + 3) {
+      background-color: rgba(255, 255, 255, 0.012);
+    }
+
+    tbody tr.data-row:hover {
+      background-color: var(--bg-hover);
+    }
+
+    td {
+      padding: 11px 12px;
+      vertical-align: top;
+      color: var(--text-primary);
+    }
+
+    .skill-cell-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .mobile-chevron {
+      display: none;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: transform 0.15s ease, color 0.15s ease;
+    }
+
+    tr.data-row.expanded .mobile-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-amber);
+    }
+
+    .detail-row {
+      display: none;
+      background-color: var(--bg-input);
+    }
+
+    .detail-card {
+      padding: 12px 14px;
+      border-left: 3px solid var(--accent-amber);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      font-size: 0.84rem;
+    }
+
+    .detail-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .detail-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .detail-value {
+      color: var(--text-primary);
+    }
+
+    .detail-value ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+
+    /* ==========================================================================
+       INLINE EDIT MODE & FORM STYLES
+       ========================================================================== */
+    .mode-toggle-group {
+      display: inline-flex;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn.active {
+      background: var(--accent-cyan-dim);
+      color: var(--accent-cyan);
+      box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.45);
+    }
+
+    .mode-btn.active.edit-active {
+      background: var(--accent-amber-dim);
+      color: var(--accent-amber);
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.45);
+    }
+
+    body.edit-mode-enabled .skill-name-trigger {
+      cursor: pointer;
+      color: var(--accent-amber);
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+    }
+
+    body.edit-mode-enabled .skill-name-trigger:hover {
+      color: #fcd34d;
+    }
+
+    .edit-row {
+      background-color: var(--bg-input);
+    }
+
+    .edit-form-card {
+      padding: 14px 16px;
+      border-left: 3px solid var(--accent-cyan);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .edit-form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .edit-form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .edit-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .edit-field-full {
+      grid-column: 1 / -1;
+    }
+
+    .edit-textarea {
+      width: 100%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      resize: vertical;
+      min-height: 56px;
+    }
+
+    .edit-textarea:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    }
+
+    .edit-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* ==========================================================================
+       MOBILE RESPONSIVE TABLE (<= 768px)
+       ========================================================================== */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .hud-header {
+        padding: 12px 14px;
+      }
+
+      .hud-title {
+        font-size: 1.15rem;
+      }
+
+      .col-desktop-only {
+        display: none;
+      }
+
+      .col-filter-input {
+        display: none;
+      }
+
+      .th-sort {
+        padding-bottom: 0;
+      }
+
+      th, td {
+        padding: 10px 9px;
+      }
+
+      tbody tr.data-row {
+        cursor: pointer;
+      }
+
+      tbody tr.data-row.expanded {
+        background-color: var(--bg-hover);
+        border-bottom-color: transparent;
+      }
+
+      .mobile-chevron {
+        display: inline-block;
+      }
+
+      tbody tr.detail-row.open {
+        display: table-row;
+      }
+    }
+
+    tbody tr:hover {
+      background-color: var(--bg-hover);
+    }
+
+    td {
+      padding: 11px 12px;
+      vertical-align: top;
+      color: var(--text-primary);
+    }
+
+    .wanzer-name {
+      font-weight: 700;
+      color: var(--accent-amber);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .skill-name {
+      font-weight: 700;
+      color: #f8fafc;
+      font-size: 0.91rem;
+      white-space: nowrap;
+    }
+
+    /* Part Badges */
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .badge-body {
+      background: var(--accent-cyan-dim);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .badge-arms {
+      background: var(--accent-rose-dim);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+    }
+
+    .badge-legs {
+      background: var(--accent-emerald-dim);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    /* Slots Pill */
+    .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .slot-1 { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .slot-2 { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .slot-3 { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .slot-4 { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .slot-5 { background: rgba(244, 63, 94, 0.18); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+
+    .condition-tag {
+      display: inline-block;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      white-space: nowrap;
+    }
+
+    .desc-text {
+      color: #e2e8f0;
+      min-width: 230px;
+      max-width: 360px;
+    }
+
+    .notes-cell {
+      color: var(--text-secondary);
+      font-size: 0.81rem;
+      min-width: 210px;
+      max-width: 340px;
+    }
+
+    .notes-cell ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+
+    .notes-cell li {
+      margin-bottom: 2px;
+    }
+
+    .notes-empty {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       5. PAGINATION FOOTER & TOAST NOTIFICATION
+       ========================================================================== */
+    .table-footer {
+      background: var(--bg-panel-alt);
+      border-top: 1px solid var(--border-subtle);
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .page-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .page-btn.active {
+      background: var(--accent-cyan);
+      color: #091017;
+      border-color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #132232;
+      border: 1px solid var(--accent-emerald);
+      color: #ecfdf5;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- TACTICAL HEADER -->
+    <header class="hud-header">
+      <h1 class="hud-title">Front Mission 3 — Battle Skills</h1>
+    </header>
+
+    <!-- CONTROLS & MULTI-FILTER PANEL -->
+    <section class="controls-panel" id="controlsPanel" aria-label="Search and Filters">
+      <div class="controls-header">
+        <div class="controls-header-title">
+          <span>Search &amp; Filters</span>
+          <span class="active-filter-badge" id="activeFilterBadge">0 Active</span>
+        </div>
+        <button type="button" class="btn" id="toggleFiltersBtn" aria-expanded="true" aria-controls="controlsBody">
+          Hide Filters ▲
+        </button>
+      </div>
+
+      <div class="controls-body" id="controlsBody">
+        <div class="controls-top">
+          <div class="control-group">
+            <label class="control-label" for="globalSearch">Global Instant Search</label>
+            <input
+              type="text"
+              id="globalSearch"
+              class="input-field"
+              placeholder="Search Wanzer, Skill, Description, Condition, or Notes..."
+            />
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="wanzerFilter">Wanzer</label>
+            <select id="wanzerFilter" class="select-field">
+              <option value="ALL">All Wanzers (32)</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="partFilter">Part</label>
+            <select id="partFilter" class="select-field">
+              <option value="ALL">All Parts</option>
+              <option value="Body">Body</option>
+              <option value="Arms">Arms</option>
+              <option value="Legs">Legs</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="conditionFilter">Condition</label>
+            <select id="conditionFilter" class="select-field">
+              <option value="ALL">All Conditions</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="slotsFilter">Computer Slots</label>
+            <select id="slotsFilter" class="select-field">
+              <option value="ALL">Any Slots (1–5)</option>
+              <option value="1">1 Slot</option>
+              <option value="2">2 Slots</option>
+              <option value="3">3 Slots</option>
+              <option value="4">4 Slots</option>
+              <option value="5">5 Slots</option>
+            </select>
+          </div>
+
+          <div class="btn-group">
+            <button type="button" class="btn" id="resetFiltersBtn" title="Reset all filters">Reset</button>
+          </div>
+        </div>
+
+        <!-- Quick Filter Rows -->
+        <div class="quick-bar">
+          <div class="quick-pills-group" id="partPills">
+            <span class="pill-label">PART:</span>
+            <button type="button" class="pill active" data-part="ALL">All</button>
+            <button type="button" class="pill" data-part="Body">Body</button>
+            <button type="button" class="pill" data-part="Arms">Arms</button>
+            <button type="button" class="pill" data-part="Legs">Legs</button>
+          </div>
+
+          <div class="quick-pills-group" id="slotPills">
+            <span class="pill-label">SLOTS:</span>
+            <button type="button" class="pill slot-pill active" data-slot="ALL">All</button>
+            <button type="button" class="pill slot-pill" data-slot="1">1</button>
+            <button type="button" class="pill slot-pill" data-slot="2">2</button>
+            <button type="button" class="pill slot-pill" data-slot="3">3</button>
+            <button type="button" class="pill slot-pill" data-slot="4">4</button>
+            <button type="button" class="pill slot-pill" data-slot="5">5</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE DATATABLE -->
+    <section class="table-card" aria-label="Battle Skills Table">
+      <div class="table-responsive">
+        <table id="skillsTable">
+          <thead>
+            <tr>
+              <th data-col="wanzer">
+                <div class="th-sort">
+                  <span>Wanzer</span>
+                  <span class="sort-indicator">▲</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="wanzer" placeholder="Filter wanzer..." />
+              </th>
+              <th data-col="part">
+                <div class="th-sort">
+                  <span>Part</span>
+                  <span class="sort-indicator">⇅</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="part" placeholder="Body/Arms/Legs" />
+              </th>
+              <th data-col="skill">
+                <div class="th-sort">
+                  <span>Skill</span>
+                  <span class="sort-indicator">⇅</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="skill" placeholder="Filter skill..." />
+              </th>
+              <th data-col="description" class="col-desktop-only">
+                <div class="th-sort">
+                  <span>Description</span>
+                  <span class="sort-indicator">⇅</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="description" placeholder="Filter description..." />
+              </th>
+              <th data-col="condition" class="col-desktop-only">
+                <div class="th-sort">
+                  <span>Condition</span>
+                  <span class="sort-indicator">⇅</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="condition" placeholder="Filter condition..." />
+              </th>
+              <th data-col="slots" class="col-desktop-only">
+                <div class="th-sort">
+                  <span>Computer slots</span>
+                  <span class="sort-indicator">⇅</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="slots" placeholder="1-5" />
+              </th>
+              <th data-col="notes" class="col-desktop-only">
+                <div class="th-sort">
+                  <span>Notes</span>
+                  <span class="sort-indicator">⇅</span>
+                </div>
+                <input type="text" class="col-filter-input" data-filter="notes" placeholder="Filter notes..." />
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Rows dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION & DISPLAY FOOTER -->
+      <footer class="table-footer">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <span id="showingInfo">Showing 1 to 25 of 96 entries</span>
+          <label style="display: inline-flex; align-items: center; gap: 6px;">
+            <span>Show</span>
+            <select id="pageSizeSelect" class="select-field" style="padding: 4px 8px; width: auto; font-size: 0.8rem;">
+              <option value="15">15</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="999" selected>All (96)</option>
+            </select>
+            <span>entries</span>
+          </label>
+        </div>
+        <div class="pagination-controls" id="paginationControls"></div>
+      </footer>
+    </section>
+
+    <!-- DATA MANAGEMENT FOOTER (IMPORT / EXPORT) -->
+    <footer class="hud-header" style="justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span class="control-label">Mode:</span>
+        <div class="mode-toggle-group" role="group" aria-label="View or Edit Mode">
+          <button type="button" class="mode-btn active" id="viewModeBtn">View</button>
+          <button type="button" class="mode-btn" id="editModeBtn">Edit</button>
+        </div>
+        <span id="editModeHint" style="font-size: 0.78rem; color: var(--accent-amber); display: none;">
+          Click any skill name to edit
+        </span>
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn" id="importCsvBtn" title="Import edited CSV file">Import CSV</button>
+        <input type="file" id="importCsvInput" accept=".csv,text/csv" style="display: none;" />
+        <button type="button" class="btn" id="restoreDefaultBtn" title="Restore original 96 wiki entries" style="display: none;">Restore Default</button>
+        <button type="button" class="btn btn-amber" id="exportCsvBtn" title="Download filtered rows as CSV">Export CSV</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast">CSV Exported!</div>
+
+  <script>
+    /* ==========================================================================
+       EXACT FRONT MISSION 3 WIKI BATTLE SKILLS DATASET (32 WANZERS × 3 = 96 ROWS)
+       ========================================================================== */
+    const DEFAULT_FM3_SKILLS = [
+      // Drake
+      { wanzer: "Drake", part: "Body", skill: "Chaff", description: "Causes the enemy's missile to miss", condition: "All weapons (defense)", slots: 1, notes: [] },
+      { wanzer: "Drake", part: "Arms", skill: "Pilot Damage I", description: "The attack deals low damage (around 2% of the weapon's damage) to the enemy machine's pilot", condition: "No grenades", slots: 1, notes: ["Does not work if the pilot is boss, such as Lukav, Kuroi, Serov, etc"] },
+      { wanzer: "Drake", part: "Legs", skill: "EXP x2", description: "Doubles the experience acquired from the battle", condition: "No grenades", slots: 1, notes: [] },
+
+      // Enyo
+      { wanzer: "Enyo", part: "Body", skill: "Auto I", description: "Only activates when the wanzer is stunned, which allows them to counter the attack if possible", condition: "No shoulder weapons", slots: 1, notes: [] },
+      { wanzer: "Enyo", part: "Arms", skill: "Leg Smash", description: "The attack will instantly destroy the enemy machine's leg or its equivalents (wheels, cater, hover)", condition: "Single-hit weapons", slots: 4, notes: ["If this skill is activated, the shot will never miss, no matter the percentage"] },
+      { wanzer: "Enyo", part: "Legs", skill: "Prevent Loss", description: "Prevents the player's wanzer from losing any of its parts, but the parts that would be otherwise destroyed will be left with only 1 HP remaining", condition: "All weapons (defense)", slots: 1, notes: ["Any hits that would destroy the part(s) will instead leave it with 1 HP remaining."] },
+
+      // Foura
+      { wanzer: "Foura", part: "Body", skill: "Pilot Eject", description: "The machine's pilot will be automatically ejected upon destruction", condition: "No shoulder weapons", slots: 1, notes: ["There must be an escape point for the pilot", "Finishes a chain if part of one"] },
+      { wanzer: "Foura", part: "Arms", skill: "Arm Smash", description: "The attack will instantly destroy the enemy machine's arm", condition: "Single-hit weapons", slots: 4, notes: ["The arm with the most powerful weapon will be prioritized over the other", "If this skill is activated, the shot will never miss, no matter the percentage"] },
+      { wanzer: "Foura", part: "Legs", skill: "Escape", description: "Pulls out from the battle before the enemy can destroy a part of the player's wanzer", condition: "All weapons (defense)", slots: 1, notes: [] },
+
+      // Genie
+      { wanzer: "Genie", part: "Body", skill: "Defense Class +1", description: "Increases the wanzer's defense class modifier by 1 level during the battle", condition: "No shoulder weapon", slots: 1, notes: ["The wanzer must have at least 1 level of defense class upgrade", "Does not work if the wanzer's defense class modifier is set to maximum"] },
+      { wanzer: "Genie", part: "Arms", skill: "Pilot Damage III", description: "The attack deals high damage (around 10% of the weapon's damage) to the enemy machine's pilot", condition: "No grenades", slots: 3, notes: ["Does not work if the pilot is boss, such as Lukav, Kuroi, Serov, etc"] },
+      { wanzer: "Genie", part: "Legs", skill: "Auto Counter", description: "Allows the player to counter enemy attacks when the enemy destroyed their wanzer's body or part(s) that are capable of doing so", condition: "All weapons (defense)", slots: 1, notes: ["The in-game condition info erroneously states that the skill can be activated with all weapons; only works with hand-held weapons."] },
+
+      // Getty
+      { wanzer: "Getty", part: "Body", skill: "Revenge III", description: "Increases the damage dealt during the counter-attack by 200% of the damage received from the enemy's attack", condition: "No shoulder weapons", slots: 3, notes: ["The enemy must attack first", "Your weapon must normally do less damage than enemy's", "If using burst weapons, the bonus damage will be distributed evenly across all shots"] },
+      { wanzer: "Getty", part: "Arms", skill: "Firing Squad", description: "Up to two allies will provide support by attacking the enemy with their ranged weapons before the player do", condition: "Ranged weapons", slots: 3, notes: ["The enemy must be within the allies' ranged weapons' range", "The allies do not gain experience from the attack"] },
+      { wanzer: "Getty", part: "Legs", skill: "Enemy Skill -2", description: "Reduces the enemy's weapon skills by 2 levels during the battle", condition: "No shoulder weapons", slots: 2, notes: [] },
+
+      // Grapple
+      { wanzer: "Grapple", part: "Body", skill: "Melee III", description: "Doubles the melee weapon's skill during the turn", condition: "Melee weapons", slots: 3, notes: [] },
+      { wanzer: "Grapple", part: "Arms", skill: "Double Punch I", description: "Attacks the enemy with the same melee weapon type on both arms", condition: "Left and right arms bear same melee type weapon", slots: 2, notes: [] },
+      { wanzer: "Grapple", part: "Legs", skill: "Skill +2", description: "Increases the player's weapon skills by 2 levels during the battle", condition: "No grenades", slots: 2, notes: ["Does not work if the weapon's skill is at maximum"] },
+
+      // Grezex
+      { wanzer: "Grezex", part: "Body", skill: "Zoom III", description: "Increases accuracy by 100% during the battle", condition: "No grenades", slots: 3, notes: ["Only works if the accuracy is below 100%"] },
+      { wanzer: "Grezex", part: "Arms", skill: "Aim", description: "Causes all shots to hit a randomly selected part of the enemy machine", condition: "Burst weapons", slots: 3, notes: [] },
+      { wanzer: "Grezex", part: "Legs", skill: "Hard Knocks", description: "Only activates when the player's wanzer is below 50% of its total HP, which increases the player's weapon skill during the battle", condition: "No grenades", slots: 1, notes: [] },
+
+      // Hoshun
+      { wanzer: "Hoshun", part: "Body", skill: "Revenge-Body", description: "If the enemy destroyed the player's wanzer's body during the battle, the player will destroy the enemy machine's body in a counter attack", condition: "No shoulder weapons", slots: 4, notes: ["The enemy must attack first.", "Your weapon must normally do less damage than enemy's"] },
+      { wanzer: "Hoshun", part: "Arms", skill: "Body Smash", description: "The attack will instantly destroy the enemy machine's body", condition: "Single-hit weapons", slots: 5, notes: ["If this skill is activated, the shot will never miss, no matter the percentage"] },
+      { wanzer: "Hoshun", part: "Legs", skill: "AP -0", description: "Reduces the AP used in the attack to 0", condition: "No grenades", slots: 3, notes: [] },
+
+      // Jinyo
+      { wanzer: "Jinyo", part: "Body", skill: "Revenge I", description: "Increases the damage dealt during the counter-attack by 120% of the damage received from the enemy's attack", condition: "No shoulder weapons", slots: 1, notes: ["The enemy must attack first", "Your weapon must normally do less damage than enemy's", "If using burst weapons, the bonus damage will be distributed evenly across all shots"] },
+      { wanzer: "Jinyo", part: "Arms", skill: "ROFUP II", description: "Increases the number of shots fired by 50%", condition: "Burst weapons", slots: 2, notes: [] },
+      { wanzer: "Jinyo", part: "Legs", skill: "Fast Attack", description: "The player attacks first and pulls out from the battle before the enemy can act", condition: "No shoulder weapons", slots: 2, notes: [] },
+
+      // Kasel
+      { wanzer: "Kasel", part: "Body", skill: "Melee II", description: "Melee weapon's skill increased by 1.5% during the turn", condition: "Melee weapons", slots: 2, notes: [] },
+      { wanzer: "Kasel", part: "Arms", skill: "Stun Punch", description: "The attack will stun the enemy machine if it hits", condition: "Melee weapons", slots: 2, notes: ["Finishes a chain, if part of one."] },
+      { wanzer: "Kasel", part: "Legs", skill: "AP -30%", description: "Reduces the AP used in the attack by 30%", condition: "No grenades", slots: 1, notes: [] },
+
+      // Kyojun
+      { wanzer: "Kyojun", part: "Body", skill: "Zoom I", description: "Increases accuracy by 20% during the battle", condition: "No grenades", slots: 1, notes: ["Only works if the accuracy is below 100%"] },
+      { wanzer: "Kyojun", part: "Arms", skill: "ROFUP I", description: "Increases the number of shots fired by 20%", condition: "Burst weapons", slots: 1, notes: [] },
+      { wanzer: "Kyojun", part: "Legs", skill: "Brace I", description: "Lets the enemy attack first, but reduces the damage received by 50%", condition: "No shoulder weapons", slots: 1, notes: ["The player must attack first"] },
+
+      // Kyokei
+      { wanzer: "Kyokei", part: "Body", skill: "Melee I", description: "Melee weapon's skill increased by 1.2% during the turn", condition: "Melee weapons", slots: 1, notes: [] },
+      { wanzer: "Kyokei", part: "Arms", skill: "Hit or Miss", description: "All shots will either hit or miss the target", condition: "Burst weapons", slots: 1, notes: ["All or nothing damage delivery from a burst weapon, one shot at stated accuracy"] },
+      { wanzer: "Kyokei", part: "Legs", skill: "Damage Fix 100", description: "Causes the hit that would deal 101-200 damage to deal 100 damage", condition: "All weapons (defense)", slots: 1, notes: [] },
+
+      // Laiying
+      { wanzer: "Laiying", part: "Body", skill: "Defense Class +2", description: "Increases the wanzer's defense class modifier by 2 levels during the battle", condition: "No shoulder weapons", slots: 2, notes: ["The machine must have at least 1 level of defense class upgrade", "Does not work if the machine's defense class modifier is set to maximum"] },
+      { wanzer: "Laiying", part: "Arms", skill: "Pilot Damage II", description: "The attack deals medium damage (around 5% of the weapon's damage) to the enemy machine's pilot", condition: "No grenades", slots: 2, notes: ["Does not work if the pilot is boss, such as Lukav, Kuroi, Serov, etc"] },
+      { wanzer: "Laiying", part: "Legs", skill: "Skill +3", description: "Increases the player's weapon skills by 3 levels during the battle", condition: "No grenades", slots: 3, notes: ["Does not work if the weapon's skill is at maximum"] },
+
+      // Lanze
+      { wanzer: "Lanze", part: "Body", skill: "Tackle III", description: "Tackles the enemy with the wanzer's body, adding 100% of the wanzer's total weight to the damage dealt", condition: "Melee weapons", slots: 3, notes: [] },
+      { wanzer: "Lanze", part: "Arms", skill: "Shield Attack II", description: "Attacks the enemy with the shield, adding 50% of the shield arm's HP to the damage dealt", condition: "Melee weapons", slots: 2, notes: ["The wanzer must be equipped with a shield"] },
+      { wanzer: "Lanze", part: "Legs", skill: "Avoid 40", description: "Causes hits that would deal 40 or lower damage to deal 0 damage", condition: "All weapons (defense)", slots: 2, notes: ["Will consume the shield's durability if triggered after choosing to defend with the shield"] },
+
+      // Lenghe
+      { wanzer: "Lenghe", part: "Body", skill: "Initiative III", description: "Lets the player attack first without handicap", condition: "No shoulder weapons", slots: 3, notes: ["The enemy must attack first"] },
+      { wanzer: "Lenghe", part: "Arms", skill: "Shield Attack III", description: "Attacks the enemy with the shield, adding 100% of the shield arm's HP to the damage dealt", condition: "Melee weapons", slots: 3, notes: ["The wanzer must be equipped with a shield"] },
+      { wanzer: "Lenghe", part: "Legs", skill: "Gang Beating", description: "Up to two allies will provide support by attacking the enemy with their melee weapons before the player do", condition: "Melee weapons", slots: 3, notes: ["The enemy must be within the allies' melee weapons' range", "The allies do not gain experience from the attack"] },
+
+      // Meledyne
+      { wanzer: "Meledyne", part: "Body", skill: "Enemy Defense Class -1", description: "Lowers the enemy's defense class modifier by 1 level during the battle", condition: "No grenades", slots: 1, notes: ["The enemy machine must have at least 1 level of defense class upgrade"] },
+      { wanzer: "Meledyne", part: "Arms", skill: "Panic Shot", description: "The attack will confuse the enemy if it hits", condition: "Ranged weapons and missiles", slots: 1, notes: [] },
+      { wanzer: "Meledyne", part: "Legs", skill: "Skill +1", description: "Increases the player's weapon skill by 1 level during the battle", condition: "No grenades", slots: 1, notes: ["Does not work if the weapon's skill is at maximum"] },
+
+      // Mingtian
+      { wanzer: "Mingtian", part: "Body", skill: "Defense Class MAX", description: "Maxes out the wanzer's defense class modifier during the battle", condition: "No shoulder weapons", slots: 3, notes: ["The wanzer must have at least 1 level of defense class upgrade", "Does not work if the wanzer's defense class modifier is set to maximum"] },
+      { wanzer: "Mingtian", part: "Arms", skill: "Random Smash", description: "The attack will instantly destroy a randomly selected part of the enemy machine", condition: "Single-hit weapons", slots: 4, notes: ["If this skill is activated, the shot will never miss, no matter the percentage"] },
+      { wanzer: "Mingtian", part: "Legs", skill: "Blackout", description: "Prevents the enemy from activating their skills during the battle", condition: "No grenades", slots: 1, notes: ["Can only be learned in missions with bosses/enemies that have battle skills"] },
+
+      // Pare
+      { wanzer: "Pare", part: "Body", skill: "Enemy Accuracy -1", description: "Lowers the enemy's accuracy modifier by 1 level during the battle", condition: "No shoulder weapons", slots: 1, notes: ["The enemy machine must have at least 1 level of accuracy upgrade"] },
+      { wanzer: "Pare", part: "Arms", skill: "Topple Shot", description: "The attack will knock down the enemy wanzer if it hits, stopping the enemy's actions for the rest of the battle and reduces their AP to half", condition: "Ranged weapons", slots: 1, notes: ["Finishes a chain combo, if part of one"] },
+      { wanzer: "Pare", part: "Legs", skill: "Evade +1", description: "Increases the wanzer's evasion modifier by 1 level during the battle", condition: "No shoulder weapons", slots: 1, notes: ["The wanzer must have at least 1 level of evasion upgrade", "Does not work if the wanzer's evasion modifier is set to maximum"] },
+
+      // Prov
+      { wanzer: "Prov", part: "Body", skill: "Auto II", description: "Only activates when the wanzer is stunned, which allows them to counter the attack if possible and recovers the wanzer from the stun", condition: "No shoulder weapons", slots: 2, notes: [] },
+      { wanzer: "Prov", part: "Arms", skill: "Double Shot I", description: "Attacks the enemy with the same ranged weapon type on both arms", condition: "Left and right arms bear same ranged type weapon", slots: 2, notes: [] },
+      { wanzer: "Prov", part: "Legs", skill: "Guard Body", description: "Protects the wanzer's body with its arms, transferring all hits that would otherwise damage the body to the arms", condition: "All weapons (defense)", slots: 1, notes: [] },
+
+      // Qibing
+      { wanzer: "Qibing", part: "Body", skill: "Revenge II", description: "Increases the damage dealt during the counter-attack by 150% of the damage received from the enemy's attack", condition: "No shoulder weapons", slots: 2, notes: ["The enemy must attack first", "Your weapon must normally do less damage than enemy's", "If using burst weapons, the bonus damage will be distributed evenly across all shots"] },
+      { wanzer: "Qibing", part: "Arms", skill: "Topple Punch", description: "The attack will knock down the enemy wanzer if it hits, stopping the enemy's actions for the rest of the battle and reduces their AP to 0", condition: "Melee weapons", slots: 2, notes: ["Finishes a chain combo if part of one"] },
+      { wanzer: "Qibing", part: "Legs", skill: "Damage Fix 200", description: "Causes the hit that would deal 201-400 damage to deal 200 damage", condition: "All weapons (defense)", slots: 1, notes: [] },
+
+      // Recson
+      { wanzer: "Recson", part: "Body", skill: "Zoom II", description: "Increases accuracy by 150% during the battle", condition: "No grenades", slots: 2, notes: ["Only works if the accuracy is below 100%"] },
+      { wanzer: "Recson", part: "Arms", skill: "Backup Fire", description: "An ally will provide support by attacking the enemy with their ranged weapons before the player does", condition: "Melee weapons", slots: 3, notes: ["The enemy must be within the ally's ranged weapons' range", "The ally do not gain experience from the attack"] },
+      { wanzer: "Recson", part: "Legs", skill: "Enemy Skill -1", description: "Reduces the enemy's weapon skills by 1 level during the battle", condition: "No shoulder weapons", slots: 1, notes: [] },
+
+      // Shangdi
+      { wanzer: "Shangdi", part: "Body", skill: "Enemy Accuracy Null", description: "Disables the enemy machine's accuracy modifier during the battle", condition: "No shoulder weapons", slots: 3, notes: ["The enemy machine must have at least 1 level of accuracy upgrade"] },
+      { wanzer: "Shangdi", part: "Arms", skill: "Double Shot II", description: "Attacks the enemy with different type ranged weapons on both arms", condition: "Left and right arms bear different type ranged weapons", slots: 2, notes: [] },
+      { wanzer: "Shangdi", part: "Legs", skill: "EXP x3", description: "Triples the experience acquired from the battle", condition: "No grenades", slots: 2, notes: [] },
+
+      // Shunwang
+      { wanzer: "Shunwang", part: "Body", skill: "Enemy Evade Null", description: "Disables the enemy wanzer's evasion modifier during the battle", condition: "No grenades", slots: 3, notes: ["The enemy wanzer must have at least 1 level of evasion upgrade"] },
+      { wanzer: "Shunwang", part: "Arms", skill: "Aim-Body", description: "Causes all shots to hit the enemy machine's body", condition: "Burst weapons", slots: 3, notes: [] },
+      { wanzer: "Shunwang", part: "Legs", skill: "Evade MAX", description: "Maxes out the wanzer's evasion modifier during the battle", condition: "No shoulder weapons", slots: 3, notes: ["The wanzer must have at least 1 level of evasion upgrade", "Does not work if the wanzer's evasion modifier is set to maximum"] },
+
+      // Shunyo
+      { wanzer: "Shunyo", part: "Body", skill: "Damage Fix 400", description: "Causes the hit that would deal 401-800 damage to deal 400 damage", condition: "All weapons (defense)", slots: 1, notes: [] },
+      { wanzer: "Shunyo", part: "Arms", skill: "Revenge-Same", description: "If the enemy destroyed a part of the player's wanzer during the battle, the player will destroy the same part of the enemy's machine in a counter-attack", condition: "No shoulder weapons", slots: 3, notes: ["The enemy must attack first", "Your weapon must normally do less damage than enemy's"] },
+      { wanzer: "Shunyo", part: "Legs", skill: "AP -60%", description: "Reduces the AP used in the attack by 60%", condition: "No grenades", slots: 2, notes: [] },
+
+      // Tiandong
+      { wanzer: "Tiandong", part: "Body", skill: "Tackle II", description: "Tackles the enemy with the wanzer's body, adding 50% of the wanzer's total weight to the damage dealt", condition: "Melee weapons", slots: 3, notes: [] },
+      { wanzer: "Tiandong", part: "Arms", skill: "Eject Punch", description: "The attack will eject the enemy machine's pilot if it hits", condition: "Melee weapons", slots: 2, notes: ["Does not work if:", "there is no escape point for the pilot", "the pilot is boss, such as Lukav, Kuroi, Serov, etc"] },
+      { wanzer: "Tiandong", part: "Legs", skill: "Avoid 20", description: "Causes hits that would deal 20 or lower damage to deal 0 damage", condition: "All weapons (defense)", slots: 1, notes: ["Will consume the shield's durability if triggered after choosing to defend with the shield"] },
+
+      // Tieqi
+      { wanzer: "Tieqi", part: "Body", skill: "Enemy Defense Class -2", description: "Lowers the enemy machine's defense class modifier by 2 levels during the battle", condition: "No grenades", slots: 2, notes: ["The enemy machine must have at least 1 level of defense class upgrade"] },
+      { wanzer: "Tieqi", part: "Arms", skill: "Aim-Leg", description: "Causes all shots to hit the enemy machine's legs or its equivalents (wheels, cater, hover)", condition: "Burst weapons", slots: 3, notes: [] },
+      { wanzer: "Tieqi", part: "Legs", skill: "Brace II", description: "Lets the enemy attack first, but reduces the damage received by 80%", condition: "No shoulder weapons", slots: 2, notes: ["The player must attack first"] },
+
+      // Vinedrai
+      { wanzer: "Vinedrai", part: "Body", skill: "Enemy Evade -2", description: "Lowers the enemy wanzer's evasion modifier by 2 levels during the battle", condition: "No grenades", slots: 2, notes: ["The enemy machine must have at least 1 level of evasion upgrade"] },
+      { wanzer: "Vinedrai", part: "Arms", skill: "Aim-Arm", description: "Causes all shots to hit the enemy wanzer's arm", condition: "Burst weapons", slots: 3, notes: ["The arm with the most powerful weapon will be prioritized over the other"] },
+      { wanzer: "Vinedrai", part: "Legs", skill: "EXP x4", description: "Quadruples the experience acquired from the battle", condition: "No grenades", slots: 3, notes: [] },
+
+      // Whisk
+      { wanzer: "Whisk", part: "Body", skill: "Enemy Defense Class Null", description: "Disables the enemy wanzer's defense class modifier during the battle", condition: "No grenades", slots: 3, notes: ["The enemy wanzer must have at least 1 level of defense class upgrade"] },
+      { wanzer: "Whisk", part: "Arms", skill: "Salvo", description: "Fires all remaining missiles at once on the attack", condition: "Missiles", slots: 1, notes: ["Does not work if there is only one remaining missile"] },
+      { wanzer: "Whisk", part: "Legs", skill: "Evade +2", description: "Increases the wanzer's evasion modifier by 2 levels during the battle", condition: "No shoulder weapons", slots: 2, notes: ["The machine must have at least 1 level of evasion upgrade", "Does not work if the machine's evasion modifier is set to maximum"] },
+
+      // Wude
+      { wanzer: "Wude", part: "Body", skill: "Enemy Accuracy -2", description: "Lowers the enemy machine's accuracy modifier by 2 levels during the battle", condition: "No shoulder weapons", slots: 2, notes: ["The enemy machine must have at least 1 level of accuracy upgrade"] },
+      { wanzer: "Wude", part: "Arms", skill: "Double Punch II", description: "Attacks the enemy with different melee type weapons on both arms", condition: "Left and right arms bear different melee type weapons", slots: 2, notes: [] },
+      { wanzer: "Wude", part: "Legs", skill: "Enemy Skill -3", description: "Reduces the enemy's weapon skills by 3 levels during the battle", condition: "No shoulder weapons", slots: 3, notes: [] },
+
+      // Yongsai
+      { wanzer: "Yongsai", part: "Body", skill: "Backup Melee", description: "An ally will provide support by attacking the enemy with their melee weapons before the player do", condition: "Ranged weapons", slots: 3, notes: ["The enemy must be within the ally's melee weapons' range", "The ally do not gain experience from the attack"] },
+      { wanzer: "Yongsai", part: "Arms", skill: "ROFUP III", description: "Increases the number of shots fired by 100%", condition: "Burst weapons", slots: 3, notes: [] },
+      { wanzer: "Yongsai", part: "Legs", skill: "Avoid 80", description: "Causes hits that would deal 80 or lower damage to deal 0 damage", condition: "All weapons (defense)", slots: 3, notes: ["Will consume the shield's durability if triggered after choosing to defend with the shield"] },
+
+      // Zenislev
+      { wanzer: "Zenislev", part: "Body", skill: "Tackle I", description: "Tackles the enemy with the wanzer's body, adding 20% of the wanzer's total weight to the damage dealt", condition: "Melee weapons", slots: 1, notes: [] },
+      { wanzer: "Zenislev", part: "Arms", skill: "Double Assault", description: "Attacks the enemy with melee and ranged weapon on both arms", condition: "Left and right arms bear melee and ranged weapon", slots: 2, notes: [] },
+      { wanzer: "Zenislev", part: "Legs", skill: "Initiative I", description: "Lets the player attack first, but causes them to take 40% more damage", condition: "No shoulder weapons", slots: 1, notes: ["The enemy must attack first"] },
+
+      // Zeros
+      { wanzer: "Zeros", part: "Body", skill: "Enemy Evade -1", description: "Lowers the enemy machine's evasion modifier by 1 level during the battle", condition: "No grenades", slots: 1, notes: ["The enemy machine must have at least 1 level of evasion upgrade"] },
+      { wanzer: "Zeros", part: "Arms", skill: "Shield Attack I", description: "Attacks the enemy with the shield, adding 20% of the shield arm's HP to the damage dealt", condition: "Melee weapons", slots: 1, notes: ["The wanzer must be equipped with a shield"] },
+      { wanzer: "Zeros", part: "Legs", skill: "Initiative II", description: "Lets the player attack first, but causes them to take 20% more damage", condition: "No shoulder weapons", slots: 2, notes: ["The enemy must attack first"] }
+    ];
+
+    const STORAGE_KEY = "fm3_battle_skills_custom_v1";
+
+    function loadInitialSkills() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return { data: parsed, isCustom: true };
+          }
+        }
+      } catch (err) {
+        console.warn("Could not read saved CSV data from localStorage:", err);
+      }
+      return { data: DEFAULT_FM3_SKILLS.map((item) => ({ ...item, notes: [...item.notes] })), isCustom: false };
+    }
+
+    const initialLoad = loadInitialSkills();
+    let FM3_SKILLS = initialLoad.data;
+    let isCustomDataset = initialLoad.isCustom;
+
+    function assignSkillIds() {
+      FM3_SKILLS.forEach((item, idx) => {
+        if (!item._id) {
+          item._id = `skill_${idx}_${Date.now()}`;
+        }
+      });
+    }
+    assignSkillIds();
+
+    /* ==========================================================================
+       APPLICATION STATE & DOM REFERENCES
+       ========================================================================== */
+    const state = {
+      search: "",
+      wanzer: "ALL",
+      part: "ALL",
+      condition: "ALL",
+      slots: "ALL",
+      colFilters: {
+        wanzer: "",
+        part: "",
+        skill: "",
+        description: "",
+        condition: "",
+        slots: "",
+        notes: ""
+      },
+      sortCol: "wanzer",
+      sortDir: "asc",
+      currentPage: 1,
+      pageSize: 999,
+      filtersCollapsed: false,
+      expandedRows: new Set(),
+      editMode: false,
+      editingId: null
+    };
+
+    const dom = {
+      controlsPanel: document.getElementById("controlsPanel"),
+      toggleFiltersBtn: document.getElementById("toggleFiltersBtn"),
+      activeFilterBadge: document.getElementById("activeFilterBadge"),
+      globalSearch: document.getElementById("globalSearch"),
+      wanzerFilter: document.getElementById("wanzerFilter"),
+      partFilter: document.getElementById("partFilter"),
+      conditionFilter: document.getElementById("conditionFilter"),
+      slotsFilter: document.getElementById("slotsFilter"),
+      resetFiltersBtn: document.getElementById("resetFiltersBtn"),
+      viewModeBtn: document.getElementById("viewModeBtn"),
+      editModeBtn: document.getElementById("editModeBtn"),
+      editModeHint: document.getElementById("editModeHint"),
+      importCsvBtn: document.getElementById("importCsvBtn"),
+      importCsvInput: document.getElementById("importCsvInput"),
+      restoreDefaultBtn: document.getElementById("restoreDefaultBtn"),
+      exportCsvBtn: document.getElementById("exportCsvBtn"),
+      partPills: document.getElementById("partPills"),
+      slotPills: document.getElementById("slotPills"),
+      tableBody: document.getElementById("tableBody"),
+      showingInfo: document.getElementById("showingInfo"),
+      pageSizeSelect: document.getElementById("pageSizeSelect"),
+      paginationControls: document.getElementById("paginationControls"),
+      toast: document.getElementById("toast")
+    };
+
+    /* ==========================================================================
+       INITIALIZE DYNAMIC DROPDOWNS FROM DATASET
+       ========================================================================== */
+    function populateDropdowns() {
+      const uniqueWanzers = [...new Set(FM3_SKILLS.map((item) => item.wanzer))].sort();
+      dom.wanzerFilter.innerHTML = `<option value="ALL">All Wanzers (${uniqueWanzers.length})</option>`;
+
+      uniqueWanzers.forEach((w) => {
+        const opt = document.createElement("option");
+        opt.value = w;
+        opt.textContent = w;
+        dom.wanzerFilter.appendChild(opt);
+      });
+
+      const uniqueConditions = [...new Set(FM3_SKILLS.map((item) => item.condition))].sort();
+      dom.conditionFilter.innerHTML = `<option value="ALL">All Conditions</option>`;
+      uniqueConditions.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        dom.conditionFilter.appendChild(opt);
+      });
+
+      const allOption = dom.pageSizeSelect.querySelector('option[value="999"]');
+      if (allOption) {
+        allOption.textContent = `All (${FM3_SKILLS.length})`;
+      }
+      dom.restoreDefaultBtn.style.display = isCustomDataset ? "inline-flex" : "none";
+    }
+
+    /* ==========================================================================
+       FILTERING & SORTING ENGINE
+       ========================================================================== */
+    const PART_ORDER = { Body: 1, Arms: 2, Legs: 3 };
+
+    function getFilteredAndSortedData() {
+      const globalTerm = state.search.trim().toLowerCase();
+
+      const filtered = FM3_SKILLS.filter((item) => {
+        if (state.wanzer !== "ALL" && item.wanzer !== state.wanzer) return false;
+        if (state.part !== "ALL" && item.part !== state.part) return false;
+        if (state.condition !== "ALL" && item.condition !== state.condition) return false;
+        if (state.slots !== "ALL" && String(item.slots) !== state.slots) return false;
+
+        // Per-column filters
+        if (state.colFilters.wanzer && !item.wanzer.toLowerCase().includes(state.colFilters.wanzer)) return false;
+        if (state.colFilters.part && !item.part.toLowerCase().includes(state.colFilters.part)) return false;
+        if (state.colFilters.skill && !item.skill.toLowerCase().includes(state.colFilters.skill)) return false;
+        if (state.colFilters.description && !item.description.toLowerCase().includes(state.colFilters.description)) return false;
+        if (state.colFilters.condition && !item.condition.toLowerCase().includes(state.colFilters.condition)) return false;
+        if (state.colFilters.slots && !String(item.slots).includes(state.colFilters.slots)) return false;
+        if (state.colFilters.notes) {
+          const notesJoined = item.notes.join(" ").toLowerCase();
+          if (!notesJoined.includes(state.colFilters.notes)) return false;
+        }
+
+        // Global search
+        if (globalTerm) {
+          const searchable = [
+            item.wanzer,
+            item.part,
+            item.skill,
+            item.description,
+            item.condition,
+            String(item.slots),
+            item.notes.join(" ")
+          ].join(" ").toLowerCase();
+          if (!searchable.includes(globalTerm)) return false;
+        }
+
+        return true;
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        if (state.sortCol === "wanzer") {
+          const cmp = a.wanzer.localeCompare(b.wanzer);
+          if (cmp !== 0) return state.sortDir === "asc" ? cmp : -cmp;
+          // Secondary sort by Body -> Arms -> Legs
+          return (PART_ORDER[a.part] || 9) - (PART_ORDER[b.part] || 9);
+        }
+
+        if (state.sortCol === "part") {
+          const diff = (PART_ORDER[a.part] || 9) - (PART_ORDER[b.part] || 9);
+          if (diff !== 0) return state.sortDir === "asc" ? diff : -diff;
+          return a.wanzer.localeCompare(b.wanzer);
+        }
+
+        if (state.sortCol === "slots") {
+          const diff = a.slots - b.slots;
+          if (diff !== 0) return state.sortDir === "asc" ? diff : -diff;
+          return a.wanzer.localeCompare(b.wanzer);
+        }
+
+        const valA = state.sortCol === "notes" ? a.notes.join(" ") : String(a[state.sortCol] || "");
+        const valB = state.sortCol === "notes" ? b.notes.join(" ") : String(b[state.sortCol] || "");
+        const cmp = valA.localeCompare(valB);
+        if (cmp !== 0) return state.sortDir === "asc" ? cmp : -cmp;
+        return a.wanzer.localeCompare(b.wanzer);
+      });
+
+      return filtered;
+    }
+
+    /* ==========================================================================
+       RENDERING ENGINE
+       ========================================================================== */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getPartBadgeClass(part) {
+      if (part === "Body") return "badge-body";
+      if (part === "Arms") return "badge-arms";
+      return "badge-legs";
+    }
+
+    function formatNotesHtml(notes) {
+      if (!notes || notes.length === 0) {
+        return `<span class="notes-empty">—</span>`;
+      }
+      if (notes.length === 1) {
+        return escapeHtml(notes[0]);
+      }
+      return `<ul>${notes.map((n) => `<li>${escapeHtml(n)}</li>`).join("")}</ul>`;
+    }
+
+    function updateActiveFilterBadge() {
+      let count = 0;
+      if (state.search.trim()) count++;
+      if (state.wanzer !== "ALL") count++;
+      if (state.part !== "ALL") count++;
+      if (state.condition !== "ALL") count++;
+      if (state.slots !== "ALL") count++;
+      Object.values(state.colFilters).forEach((val) => {
+        if (val) count++;
+      });
+
+      if (count > 0) {
+        dom.activeFilterBadge.textContent = `${count} Active`;
+        dom.activeFilterBadge.classList.add("visible");
+      } else {
+        dom.activeFilterBadge.classList.remove("visible");
+      }
+    }
+
+    function render() {
+      const processed = getFilteredAndSortedData();
+      const filteredCount = processed.length;
+      updateActiveFilterBadge();
+
+      const totalPages = Math.max(1, Math.ceil(filteredCount / state.pageSize));
+      if (state.currentPage > totalPages) state.currentPage = totalPages;
+
+      const startIndex = (state.currentPage - 1) * state.pageSize;
+      const endIndex = Math.min(startIndex + state.pageSize, filteredCount);
+      const pageSlice = processed.slice(startIndex, endIndex);
+
+      if (pageSlice.length === 0) {
+        dom.tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="empty-state">
+              No Front Mission 3 battle skills match your current filter criteria. Click <strong>Reset</strong> to show all 96 skills.
+            </td>
+          </tr>
+        `;
+      } else {
+        dom.tableBody.innerHTML = pageSlice
+          .map((row) => {
+            const rowKey = row._id;
+            const isExpanded = state.expandedRows.has(rowKey);
+            const isEditing = state.editMode && state.editingId === rowKey;
+            const visibleCols = window.innerWidth <= 768 ? 3 : 7;
+
+            let html = `
+            <tr class="data-row ${isExpanded ? "expanded" : ""}" data-row-key="${escapeHtml(rowKey)}">
+              <td class="wanzer-name">${escapeHtml(row.wanzer)}</td>
+              <td><span class="badge ${getPartBadgeClass(row.part)}">${escapeHtml(row.part)}</span></td>
+              <td class="skill-name">
+                <div class="skill-cell-wrapper">
+                  <span class="skill-name-trigger" data-edit-id="${escapeHtml(rowKey)}">${escapeHtml(row.skill)}</span>
+                  <span class="mobile-chevron" aria-hidden="true">▼</span>
+                </div>
+              </td>
+              <td class="desc-text col-desktop-only">${escapeHtml(row.description)}</td>
+              <td class="col-desktop-only"><span class="condition-tag">${escapeHtml(row.condition)}</span></td>
+              <td class="col-desktop-only" style="text-align: center;">
+                <span class="slot-badge slot-${row.slots}">${row.slots}</span>
+              </td>
+              <td class="notes-cell col-desktop-only">${formatNotesHtml(row.notes)}</td>
+            </tr>
+            `;
+
+            if (isEditing) {
+              html += `
+              <tr class="edit-row" data-edit-row-for="${escapeHtml(rowKey)}">
+                <td colspan="${visibleCols}">
+                  <form class="edit-form-card" data-form-id="${escapeHtml(rowKey)}">
+                    <div class="edit-form-grid">
+                      <div class="control-group">
+                        <label class="control-label">Wanzer</label>
+                        <input type="text" name="wanzer" class="input-field" value="${escapeHtml(row.wanzer)}" required />
+                      </div>
+                      <div class="control-group">
+                        <label class="control-label">Part</label>
+                        <select name="part" class="select-field">
+                          <option value="Body" ${row.part === "Body" ? "selected" : ""}>Body</option>
+                          <option value="Arms" ${row.part === "Arms" ? "selected" : ""}>Arms</option>
+                          <option value="Legs" ${row.part === "Legs" ? "selected" : ""}>Legs</option>
+                        </select>
+                      </div>
+                      <div class="control-group">
+                        <label class="control-label">Skill Name</label>
+                        <input type="text" name="skill" class="input-field" value="${escapeHtml(row.skill)}" required />
+                      </div>
+                      <div class="control-group">
+                        <label class="control-label">Computer Slots (1–5)</label>
+                        <select name="slots" class="select-field">
+                          <option value="1" ${Number(row.slots) === 1 ? "selected" : ""}>1</option>
+                          <option value="2" ${Number(row.slots) === 2 ? "selected" : ""}>2</option>
+                          <option value="3" ${Number(row.slots) === 3 ? "selected" : ""}>3</option>
+                          <option value="4" ${Number(row.slots) === 4 ? "selected" : ""}>4</option>
+                          <option value="5" ${Number(row.slots) === 5 ? "selected" : ""}>5</option>
+                        </select>
+                      </div>
+                      <div class="control-group edit-field-full">
+                        <label class="control-label">Condition</label>
+                        <input type="text" name="condition" class="input-field" value="${escapeHtml(row.condition)}" />
+                      </div>
+                      <div class="control-group edit-field-full">
+                        <label class="control-label">Description</label>
+                        <textarea name="description" class="edit-textarea">${escapeHtml(row.description)}</textarea>
+                      </div>
+                      <div class="control-group edit-field-full">
+                        <label class="control-label">Notes (one bullet per line)</label>
+                        <textarea name="notes" class="edit-textarea" placeholder="Optional notes...">${escapeHtml(row.notes.join("\n"))}</textarea>
+                      </div>
+                    </div>
+                    <div class="edit-actions">
+                      <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer;">
+                        <input type="checkbox" name="exportAfterSave" />
+                        <span>Download updated CSV immediately on save</span>
+                      </label>
+                      <div class="btn-group">
+                        <button type="button" class="btn cancel-edit-btn">Cancel</button>
+                        <button type="submit" class="btn btn-amber">Save Changes</button>
+                      </div>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+              `;
+            } else {
+              html += `
+              <tr class="detail-row ${isExpanded ? "open" : ""}" data-detail-for="${escapeHtml(rowKey)}">
+                <td colspan="3">
+                  <div class="detail-card">
+                    <div class="detail-item">
+                      <span class="detail-label">Description</span>
+                      <div class="detail-value">${escapeHtml(row.description)}</div>
+                    </div>
+                    <div class="detail-meta-row">
+                      <div class="detail-item">
+                        <span class="detail-label">Condition</span>
+                        <div><span class="condition-tag">${escapeHtml(row.condition)}</span></div>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Computer Slots</span>
+                        <div><span class="slot-badge slot-${row.slots}">${row.slots}</span></div>
+                      </div>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Notes</span>
+                      <div class="detail-value">${formatNotesHtml(row.notes)}</div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              `;
+            }
+
+            return html;
+          })
+          .join("");
+      }
+
+      if (filteredCount === 0) {
+        dom.showingInfo.textContent = "Showing 0 entries";
+      } else {
+        dom.showingInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${filteredCount} entries`;
+      }
+
+      renderPagination(totalPages);
+      updateSortIndicators();
+    }
+
+    function renderPagination(totalPages) {
+      if (totalPages <= 1) {
+        dom.paginationControls.innerHTML = "";
+        return;
+      }
+
+      let html = `
+        <button type="button" class="page-btn" data-page="${state.currentPage - 1}" ${state.currentPage === 1 ? "disabled" : ""}>
+          &laquo; Prev
+        </button>
+      `;
+
+      for (let p = 1; p <= totalPages; p++) {
+        html += `
+          <button type="button" class="page-btn ${p === state.currentPage ? "active" : ""}" data-page="${p}">
+            ${p}
+          </button>
+        `;
+      }
+
+      html += `
+        <button type="button" class="page-btn" data-page="${state.currentPage + 1}" ${state.currentPage === totalPages ? "disabled" : ""}>
+          Next &raquo;
+        </button>
+      `;
+
+      dom.paginationControls.innerHTML = html;
+    }
+
+    function updateSortIndicators() {
+      document.querySelectorAll("#skillsTable thead th").forEach((th) => {
+        const col = th.getAttribute("data-col");
+        const indicator = th.querySelector(".sort-indicator");
+        th.classList.remove("sorted-asc", "sorted-desc");
+        if (col === state.sortCol) {
+          th.classList.add(state.sortDir === "asc" ? "sorted-asc" : "sorted-desc");
+          indicator.textContent = state.sortDir === "asc" ? "▲" : "▼";
+        } else {
+          indicator.textContent = "⇅";
+        }
+      });
+    }
+
+    function syncQuickPills() {
+      dom.partPills.querySelectorAll(".pill").forEach((pill) => {
+        pill.classList.toggle("active", pill.getAttribute("data-part") === state.part);
+      });
+      dom.slotPills.querySelectorAll(".pill").forEach((pill) => {
+        pill.classList.toggle("active", pill.getAttribute("data-slot") === state.slots);
+      });
+    }
+
+    function showToast(message) {
+      dom.toast.textContent = message;
+      dom.toast.classList.add("show");
+      setTimeout(() => {
+        dom.toast.classList.remove("show");
+      }, 2400);
+    }
+
+    /* ==========================================================================
+       CSV EXPORT (WORKS 100% OFFLINE VIA BLOB URL)
+       ========================================================================== */
+    function exportFilteredCsv() {
+      const rows = getFilteredAndSortedData();
+      const headers = ["Wanzer", "Part", "Skill", "Description", "Condition", "Computer slots", "Notes"];
+      const csvLines = [headers.join(",")];
+
+      rows.forEach((r) => {
+        const line = [
+          r.wanzer,
+          r.part,
+          r.skill,
+          r.description,
+          r.condition,
+          r.slots,
+          r.notes.join(" | ")
+        ].map((val) => `"${String(val).replace(/"/g, '""')}"`);
+        csvLines.push(line.join(","));
+      });
+
+      const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "fm3_battle_skills.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${rows.length} rows to CSV`);
+    }
+
+    /* ==========================================================================
+       CSV IMPORT & RFC-4180 PARSER (WORKS 100% OFFLINE + SAVES TO LOCALSTORAGE)
+       ========================================================================== */
+    function parseCsvRows(text) {
+      const rows = [];
+      let currentRow = [];
+      let currentField = "";
+      let inQuotes = false;
+
+      // Strip UTF-8 BOM if present
+      const cleanText = text.replace(/^\uFEFF/, "");
+
+      for (let i = 0; i < cleanText.length; i++) {
+        const char = cleanText[i];
+        const nextChar = cleanText[i + 1];
+
+        if (inQuotes) {
+          if (char === '"' && nextChar === '"') {
+            currentField += '"';
+            i++;
+          } else if (char === '"') {
+            inQuotes = false;
+          } else {
+            currentField += char;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ",") {
+            currentRow.push(currentField);
+            currentField = "";
+          } else if (char === "\r" && nextChar === "\n") {
+            currentRow.push(currentField);
+            rows.push(currentRow);
+            currentRow = [];
+            currentField = "";
+            i++;
+          } else if (char === "\n" || char === "\r") {
+            currentRow.push(currentField);
+            rows.push(currentRow);
+            currentRow = [];
+            currentField = "";
+          } else {
+            currentField += char;
+          }
+        }
+      }
+
+      if (currentField.length > 0 || currentRow.length > 0) {
+        currentRow.push(currentField);
+        rows.push(currentRow);
+      }
+
+      return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
+    }
+
+    function handleCsvImport(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsedRows = parseCsvRows(String(event.target.result || ""));
+          if (parsedRows.length < 2) {
+            showToast("CSV file is empty or missing data rows");
+            return;
+          }
+
+          const headers = parsedRows[0].map((h) => h.trim().toLowerCase());
+          const idxWanzer = headers.indexOf("wanzer");
+          const idxPart = headers.indexOf("part");
+          const idxSkill = headers.indexOf("skill");
+          const idxDesc = headers.indexOf("description");
+          const idxCond = headers.indexOf("condition");
+          const idxSlots = headers.findIndex((h) => h.includes("slot"));
+          const idxNotes = headers.indexOf("notes");
+
+          if (idxWanzer === -1 || idxPart === -1 || idxSkill === -1) {
+            showToast("Invalid CSV: requires Wanzer, Part, and Skill columns");
+            return;
+          }
+
+          const importedSkills = [];
+          for (let i = 1; i < parsedRows.length; i++) {
+            const cols = parsedRows[i];
+            const wanzer = (cols[idxWanzer] || "").trim();
+            const part = (cols[idxPart] || "").trim();
+            const skill = (cols[idxSkill] || "").trim();
+            if (!wanzer && !skill) continue;
+
+            const description = idxDesc !== -1 ? (cols[idxDesc] || "").trim() : "";
+            const condition = idxCond !== -1 ? (cols[idxCond] || "").trim() : "";
+            const rawSlots = idxSlots !== -1 ? parseInt(cols[idxSlots], 10) : 1;
+            const slots = Number.isFinite(rawSlots) && rawSlots >= 1 && rawSlots <= 5 ? rawSlots : 1;
+            const rawNotes = idxNotes !== -1 ? (cols[idxNotes] || "").trim() : "";
+            const notes = rawNotes
+              ? rawNotes.split("|").map((n) => n.trim()).filter(Boolean)
+              : [];
+
+            importedSkills.push({
+              wanzer: wanzer || "Unknown",
+              part: part || "Body",
+              skill: skill || "Unnamed Skill",
+              description,
+              condition,
+              slots,
+              notes
+            });
+          }
+
+          if (importedSkills.length === 0) {
+            showToast("No valid skill rows found in CSV");
+            return;
+          }
+
+          FM3_SKILLS = importedSkills;
+          assignSkillIds();
+          isCustomDataset = true;
+          saveSkillsToStorage();
+
+          state.wanzer = "ALL";
+          state.condition = "ALL";
+          state.currentPage = 1;
+          state.expandedRows.clear();
+          state.editingId = null;
+          populateDropdowns();
+          render();
+          showToast(`Imported ${importedSkills.length} rows from CSV`);
+        } catch (err) {
+          console.error("CSV import error:", err);
+          showToast("Failed to parse CSV file");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function saveSkillsToStorage() {
+      try {
+        const cleanData = FM3_SKILLS.map(({ _id, ...rest }) => rest);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanData));
+      } catch (storageErr) {
+        console.warn("Could not save data to localStorage:", storageErr);
+      }
+    }
+
+    function setEditMode(enabled) {
+      state.editMode = enabled;
+      if (!enabled) {
+        state.editingId = null;
+      }
+      document.body.classList.toggle("edit-mode-enabled", enabled);
+      dom.viewModeBtn.classList.toggle("active", !enabled);
+      dom.editModeBtn.classList.toggle("active", enabled);
+      dom.editModeBtn.classList.toggle("edit-active", enabled);
+      dom.editModeHint.style.display = enabled ? "inline" : "none";
+      render();
+    }
+
+    function restoreDefaultSkills() {
+      FM3_SKILLS = DEFAULT_FM3_SKILLS.map((item) => ({ ...item, notes: [...item.notes] }));
+      assignSkillIds();
+      isCustomDataset = false;
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (err) {
+        console.warn("Could not clear localStorage:", err);
+      }
+      state.wanzer = "ALL";
+      state.condition = "ALL";
+      state.currentPage = 1;
+      state.expandedRows.clear();
+      state.editingId = null;
+      populateDropdowns();
+      render();
+      showToast("Restored original 96 skills");
+    }
+
+    /* ==========================================================================
+       EVENT LISTENERS
+       ========================================================================== */
+    dom.toggleFiltersBtn.addEventListener("click", () => {
+      state.filtersCollapsed = !state.filtersCollapsed;
+      dom.controlsPanel.classList.toggle("collapsed", state.filtersCollapsed);
+      dom.toggleFiltersBtn.setAttribute("aria-expanded", String(!state.filtersCollapsed));
+      dom.toggleFiltersBtn.textContent = state.filtersCollapsed ? "Show Filters ▼" : "Hide Filters ▲";
+    });
+
+    dom.viewModeBtn.addEventListener("click", () => setEditMode(false));
+    dom.editModeBtn.addEventListener("click", () => setEditMode(true));
+
+    dom.tableBody.addEventListener("click", (e) => {
+      // Cancel button inside inline edit form
+      if (e.target.closest(".cancel-edit-btn")) {
+        state.editingId = null;
+        render();
+        return;
+      }
+
+      // When in Edit Mode, clicking the skill name toggles its inline edit form
+      if (state.editMode) {
+        const skillTrigger = e.target.closest(".skill-name-trigger");
+        if (skillTrigger) {
+          const editId = skillTrigger.getAttribute("data-edit-id");
+          state.editingId = state.editingId === editId ? null : editId;
+          render();
+          return;
+        }
+      }
+
+      // Expand/collapse detail row on mobile viewports (<= 768px)
+      if (window.innerWidth > 768) return;
+      if (e.target.closest(".edit-row")) return;
+      const dataRow = e.target.closest("tr.data-row");
+      if (!dataRow) return;
+      const rowKey = dataRow.getAttribute("data-row-key");
+      if (!rowKey) return;
+
+      if (state.expandedRows.has(rowKey)) {
+        state.expandedRows.delete(rowKey);
+      } else {
+        state.expandedRows.add(rowKey);
+      }
+      render();
+    });
+
+    dom.tableBody.addEventListener("submit", (e) => {
+      const form = e.target.closest(".edit-form-card");
+      if (!form) return;
+      e.preventDefault();
+
+      const formId = form.getAttribute("data-form-id");
+      const targetIndex = FM3_SKILLS.findIndex((item) => item._id === formId);
+      if (targetIndex === -1) return;
+
+      const formData = new FormData(form);
+      const updatedWanzer = String(formData.get("wanzer") || "").trim() || FM3_SKILLS[targetIndex].wanzer;
+      const updatedPart = String(formData.get("part") || "Body").trim();
+      const updatedSkill = String(formData.get("skill") || "").trim() || FM3_SKILLS[targetIndex].skill;
+      const updatedSlots = parseInt(String(formData.get("slots") || "1"), 10) || 1;
+      const updatedCondition = String(formData.get("condition") || "").trim();
+      const updatedDescription = String(formData.get("description") || "").trim();
+      const rawNotes = String(formData.get("notes") || "");
+      const updatedNotes = rawNotes
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const shouldExport = formData.get("exportAfterSave") === "on";
+
+      FM3_SKILLS[targetIndex] = {
+        ...FM3_SKILLS[targetIndex],
+        wanzer: updatedWanzer,
+        part: updatedPart,
+        skill: updatedSkill,
+        slots: updatedSlots,
+        condition: updatedCondition,
+        description: updatedDescription,
+        notes: updatedNotes
+      };
+
+      isCustomDataset = true;
+      saveSkillsToStorage();
+      state.editingId = null;
+
+      // Preserve active dropdown selections if still valid
+      const prevWanzer = state.wanzer;
+      const prevCondition = state.condition;
+      populateDropdowns();
+      if ([...dom.wanzerFilter.options].some((o) => o.value === prevWanzer)) {
+        dom.wanzerFilter.value = prevWanzer;
+      } else {
+        state.wanzer = "ALL";
+      }
+      if ([...dom.conditionFilter.options].some((o) => o.value === prevCondition)) {
+        dom.conditionFilter.value = prevCondition;
+      } else {
+        state.condition = "ALL";
+      }
+
+      render();
+
+      if (shouldExport) {
+        exportFilteredCsv();
+      } else {
+        showToast(`Saved "${updatedSkill}" to browser storage`);
+      }
+    });
+
+    dom.globalSearch.addEventListener("input", (e) => {
+      state.search = e.target.value;
+      state.currentPage = 1;
+      render();
+    });
+
+    dom.wanzerFilter.addEventListener("change", (e) => {
+      state.wanzer = e.target.value;
+      state.currentPage = 1;
+      render();
+    });
+
+    dom.partFilter.addEventListener("change", (e) => {
+      state.part = e.target.value;
+      state.currentPage = 1;
+      syncQuickPills();
+      render();
+    });
+
+    dom.conditionFilter.addEventListener("change", (e) => {
+      state.condition = e.target.value;
+      state.currentPage = 1;
+      render();
+    });
+
+    dom.slotsFilter.addEventListener("change", (e) => {
+      state.slots = e.target.value;
+      state.currentPage = 1;
+      syncQuickPills();
+      render();
+    });
+
+    dom.partPills.addEventListener("click", (e) => {
+      const btn = e.target.closest(".pill");
+      if (!btn) return;
+      state.part = btn.getAttribute("data-part");
+      dom.partFilter.value = state.part;
+      state.currentPage = 1;
+      syncQuickPills();
+      render();
+    });
+
+    dom.slotPills.addEventListener("click", (e) => {
+      const btn = e.target.closest(".pill");
+      if (!btn) return;
+      state.slots = btn.getAttribute("data-slot");
+      dom.slotsFilter.value = state.slots;
+      state.currentPage = 1;
+      syncQuickPills();
+      render();
+    });
+
+    document.querySelectorAll(".col-filter-input").forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const key = e.target.getAttribute("data-filter");
+        state.colFilters[key] = e.target.value.trim().toLowerCase();
+        state.currentPage = 1;
+        render();
+      });
+      input.addEventListener("click", (e) => e.stopPropagation());
+    });
+
+    document.querySelectorAll("#skillsTable thead .th-sort").forEach((sortHeader) => {
+      sortHeader.addEventListener("click", () => {
+        const th = sortHeader.closest("th");
+        const col = th.getAttribute("data-col");
+        if (state.sortCol === col) {
+          state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        } else {
+          state.sortCol = col;
+          state.sortDir = "asc";
+        }
+        render();
+      });
+    });
+
+    dom.paginationControls.addEventListener("click", (e) => {
+      const btn = e.target.closest(".page-btn");
+      if (!btn || btn.disabled) return;
+      state.currentPage = Number(btn.getAttribute("data-page"));
+      render();
+    });
+
+    dom.pageSizeSelect.addEventListener("change", (e) => {
+      state.pageSize = Number(e.target.value);
+      state.currentPage = 1;
+      render();
+    });
+
+    dom.resetFiltersBtn.addEventListener("click", () => {
+      state.search = "";
+      state.wanzer = "ALL";
+      state.part = "ALL";
+      state.condition = "ALL";
+      state.slots = "ALL";
+      state.colFilters = {
+        wanzer: "",
+        part: "",
+        skill: "",
+        description: "",
+        condition: "",
+        slots: "",
+        notes: ""
+      };
+      state.sortCol = "wanzer";
+      state.sortDir = "asc";
+      state.currentPage = 1;
+      state.expandedRows.clear();
+
+      dom.globalSearch.value = "";
+      dom.wanzerFilter.value = "ALL";
+      dom.partFilter.value = "ALL";
+      dom.conditionFilter.value = "ALL";
+      dom.slotsFilter.value = "ALL";
+      document.querySelectorAll(".col-filter-input").forEach((inp) => (inp.value = ""));
+      syncQuickPills();
+      render();
+      showToast("All filters reset");
+    });
+
+    dom.importCsvBtn.addEventListener("click", () => {
+      dom.importCsvInput.value = "";
+      dom.importCsvInput.click();
+    });
+
+    dom.importCsvInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      handleCsvImport(file);
+    });
+
+    dom.restoreDefaultBtn.addEventListener("click", restoreDefaultSkills);
+
+    dom.exportCsvBtn.addEventListener("click", exportFilteredCsv);
+
+    // Boot
+    populateDropdowns();
+    render();
+  </script>
+</body>
+</html>
